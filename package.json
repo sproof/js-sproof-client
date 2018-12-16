@@ -1,0 +1,47 @@
+{
+  "name": "js-sproof-client",
+  "version": "1.0.0",
+  "description": "JavaScript implementation of the sproof specification",
+  "main": "./build/index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec",
+    "build": "browserify ./src/index.js -o build/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sproof/js-sproof-client.git"
+  },
+  "keywords": ["http client", "rest", "api", "json", "sproof"],
+  "author": "Clemens Brunner",
+  "homepage" : "https://sproof.it",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-rc.3",
+    "@babel/preset-env": "^7.0.0-rc.3",
+    "autoprefixer": "^8.4.1",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.3",
+    "babel-loader": "^7.1.4",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-react-hmre": "^1.1.1",
+    "babel-preset-stage-1": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "babelify": "^9.0.0",
+    "browserify": "^16.2.3",
+    "chai": "^4.2.0",
+    "mocha": "^5.1.1",
+    "webpack": "^4.26.1",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-cli": "^3.1.2",
+    "webpack-merge": "^4.1.4"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "socket.io-client": "^2.1.1"
+  }
+}
