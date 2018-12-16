@@ -2,4 +2,4 @@
 
 
 
-An http client implementation for the sproof protocol. 
+A http client implementation for the sproof protocol. 
