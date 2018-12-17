@@ -1,0 +1,19 @@
+language: node_js
+node_js:
+  - "stable"
+cache:
+  directories:
+  - node_modules
+script:
+  - npm test
+  - npm run build
+
+jobs:
+  include:
+    - stage: npm
+      script: echo "Deploying to npm ..."
+      deploy:
+        provider: npm
+        api_key:
+          secure: atLdH0ARwSnz4mr2erAN8b2KQBnVs0TUWNnsdYep6YTjCQIq6+ZP14Ger2mveTZLE0cYh2gZRyUEtMOa3AYwIMhYS8rsgxmfPciMcjiX6ddcrjIqDRSqXvd77/s1cUv6qevSweG4RA4OMCTVBunEsqcHcwhC1r/+Okx39ico4wZ1w8V8MflHMFBwuz+zQ0EletBP3N4fld+0DW0LiEG8vTzwCwG9gSc6hnbXTJpDvHhgYpdSR+IMz2HMcL1EYYefWwuYRf2xEn6Erv9TrsqCvu4tmAz245T0nXDvvqK+WtskxV8G3MkBpYM2prgD9vZglKUMr3GrKaZQ+ruNm+s6IazINvRyis8fkh3QAfUjpQxxbvlzAcyeKbaJXFHqSo6gPINTTXjiUK9rrqHsdEc7MyXHpt91lV1SjiTihthVd9crjdtJcfWbJiuXV2vyGG2nmU/FujbufIUyMx4PtwWOXdzx0uFkntq9HJRKP+ly4TXDyGT+HvaT8pZpfGXdKu7hEA6ek+PQLUZlaUBhE9a3U+9sO6xFAmZWIJ8VhjzrNCG+fee8Of3Q/FUKX91eFCWM5wMJgOSNExrMXSOKpY+VRSmjB2a0HbltZTnAxeI0CnfjjVmZK+yBO2/Kx1EnSgP+8XNHIdqgg5LWLmsbWeONmvqcRR90eA6zz75Q8/fbucY=
+        on: deploy-npm-release
