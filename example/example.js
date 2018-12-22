@@ -1,5 +1,5 @@
 const config = require('./config.js');
-const {Sproof, Receiver, Card}  = require('./index.js');
+const {Sproof, Receiver, Card}  = require('../lib');
 
 let sproof = new Sproof(config);
 

@@ -1,19 +1,25 @@
 {
   "name": "js-sproof-client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "JavaScript implementation of the sproof specification",
-  "main": "./build/index.js",
+  "main": "index.js"
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec",
-    "build": "browserify ./src/index.js -o build/index.js"
+    "build:browser": "browserify ./src/index.js -o lib/index.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/sproof/js-sproof-client.git"
   },
-  "keywords": ["http client", "rest", "api", "json", "sproof"],
+  "keywords": [
+    "http client",
+    "rest",
+    "api",
+    "json",
+    "sproof"
+  ],
   "author": "Clemens Brunner",
-  "homepage" : "https://sproof.it",
+  "homepage": "https://sproof.it",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.0.0-rc.3",
@@ -39,6 +45,7 @@
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
     "webpack-merge": "^4.1.4"
+
   },
   "dependencies": {
     "axios": "^0.18.0",
