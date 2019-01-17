@@ -5,8 +5,9 @@ let e = {
   Receiver,
   Registration,
   Card
-}
+};
+
+//if(typeof window === "undefined") window._s = e;
 
 module.exports = e;
 
-window._s = e;

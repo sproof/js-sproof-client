@@ -4,7 +4,7 @@ const Message = require ('./message');
 const Api = require ('./api');
 
 class Sproof {
-  constructor(config ={}) {
+  constructor(config = {}) {
     this.config = config;
     this.events = [];
 
