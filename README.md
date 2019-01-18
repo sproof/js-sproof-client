@@ -4,4 +4,5 @@
 
 A http client implementation for the sproof protocol. 
 
-Examples can be found here: https://github.com/sproof/js-sproof-client/tree/master/example
+
+Find the documentation here: [docs](https://sproof-docs.readthedocs.io)
