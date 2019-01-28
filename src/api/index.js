@@ -4,7 +4,7 @@ const io = require('socket.io-client');
 class API {
   constructor(config = {}){
     this.config = config;
-    this.io = io(config.uri);
+    this.io = null;
     this.versionpath = 'api/v1/'
 
   }
@@ -14,6 +14,7 @@ class API {
   }
 
   on (event, fun) {
+    if (!this.io) this.io = io(this.config.uri);
     this.io.on(event, fun);
   }
 
