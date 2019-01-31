@@ -169,6 +169,12 @@ class Sproof {
     return credentials;
   }
 
+  restoreAccount(mnemonic) {
+      let credentials = utils.restoreCredentials(mnemonic);
+      this.config.credentials = credentials;
+      return credentials;
+  }
+
   verify(sharedReceiver, callback) {
     let restoredReceiver = Receiver.restore(sharedReceiver);
     let validationResult = Receiver.validate(restoredReceiver, sharedReceiver.signature);

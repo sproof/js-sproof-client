@@ -1,6 +1,6 @@
 {
   "name": "js-sproof-client",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "JavaScript implementation of the sproof specification",
   "main": "index.js",
   "scripts": {
@@ -45,11 +45,10 @@
     "webpack-bundle-analyzer": "^3.0.3",
     "webpack-cli": "^3.1.2",
     "webpack-merge": "^4.1.4"
-
   },
   "dependencies": {
     "axios": "^0.18.0",
     "socket.io-client": "^2.1.1",
-    "sproof-utils" : "^0.0.1"
+    "sproof-utils": "^0.0.1"
   }
 }
