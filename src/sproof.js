@@ -24,6 +24,7 @@ class Sproof {
     return data;
   }
 
+
   updateProfile(data){
     this.addEvent({
       eventType: 'PROFILE_UPDATE',
@@ -92,6 +93,14 @@ class Sproof {
 
   addEvent(event){
     this.events.push(event);
+  }
+
+  registerPremiumUser(data, callback){
+    this.api.registerPremiumUser(data,callback);
+  }
+
+  getUser(callback) {
+    this.api.get('user', {}, callback);
   }
 
   getState(callback) {

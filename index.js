@@ -10,4 +10,3 @@ let e = {
 //if(typeof window === "undefined") window._s = e;
 
 module.exports = e;
-

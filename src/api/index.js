@@ -23,6 +23,7 @@ class API {
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
     let credentials = this.createCredentials(this.config.credentials);
+
     axios.post(url, {...data, credentials}).then(res => {
       if (res.data.error) return callback(res.data.error);
       return callback(null, res.data.result);
@@ -35,18 +36,30 @@ class API {
     this.post('storage/upload', {file: buf}, callback);
   }
 
-  get(url, params, callback){
-    url =  this.versionpath + url;
+  get(url, params, callback) {
+    url = this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
-    url = `${url}${params.id ? `/${params.id}` : '' }`;
+    url = `${url}${params.id ? `/${params.id}/` : '' }`;
     delete params.id;
-    let credentials = this.createCredentials(this.config.credentials);
-    axios.get(url, {params, credentials }).then(res => {
+
+    let auth = this.createCredentials(this.config.credentials);
+    params = {...params}
+
+    let lst = Object.keys(params).map(k => `${k}=${params[k]}`);
+
+    if (lst.length !== 0)
+      url = url + '?' + lst.join('&');
+
+      axios.get(url, { headers: { auth: JSON.stringify(auth) }, ...params }).then(res => {
       if (res.data.error) return callback(res.data.error);
       callback(null, res.data.result);
     }).catch(err => {
-      callback(err);
+      callback(err.message);
     })
+  }
+
+  registerPremiumUser(data, callback) {
+    this.post('user/register', data, callback);
   }
 
   getHash (data, callback) {

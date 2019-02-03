@@ -11,13 +11,15 @@ class Registration {
       receivers: []
     };
 
-    let {documentHash, data, validFrom, validUntil} = params;
+    let {documentHash, data, validFrom, validUntil, name, locationHash} = params;
 
     this.state = {
       ...defaultState,
       documentHash : data ? utils.getHash(data) : documentHash,
       validFrom,
       validUntil,
+      locationHash,
+      name,
       data
     }
   }
