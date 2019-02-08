@@ -1,6 +1,6 @@
 const {Sproof}  = require('../index.js');
 
-let sproof = new Sproof({uri: 'https://www.sproof.it/'});
+let sproof = new Sproof({uri: 'https://api.sproof.it/'});
 sproof.newAccount();
 
 //sproof.on('setting:update', console.log);

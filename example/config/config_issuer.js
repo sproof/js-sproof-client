@@ -1,6 +1,6 @@
 let config = {
 
-  uri: 'https://sproof.it/',
+  uri: 'https://api.sproof.it/',
   credentials: {
     privateKey: '0x9e41a288edeb478ecad5e34d4bb60ca45e3ce695e349dc0ff16790d01eebde05',
     address: '0xee883fca2a622f6ce4010b12d2eeda77c477602c',

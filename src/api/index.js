@@ -1,5 +1,6 @@
 const axios = require('axios');
 const io = require('socket.io-client');
+const utils = require('sproof-utils');
 
 class API {
   constructor(config = {}){
@@ -10,11 +11,20 @@ class API {
   }
 
   createCredentials (credentials) {
-    return {address: credentials.address}
+    let signature;
+
+    if (credentials.address)
+      signature = utils.sign(credentials.address, credentials.privateKey);
+
+    return {
+      address: credentials.address,
+      signature
+    }
   }
 
   on (event, fun) {
-    if (!this.io) this.io = io(this.config.uri);
+    let webSocketUri = this.config.socket || this.config.uri;
+    if (!this.io) this.io = io(webSocketUri);
     this.io.on(event, fun);
   }
 
