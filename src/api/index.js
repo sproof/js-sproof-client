@@ -35,10 +35,12 @@ class API {
     let credentials = this.createCredentials(this.config.credentials);
 
     axios.post(url, {...data, credentials}).then(res => {
-      if (res.data.error) return callback(res.data.error);
+      if (res.data.error) {
+        return callback(res.data.error);
+      }
       return callback(null, res.data.result);
     }).catch(err => {
-      callback(err)
+      callback(this.createError(err))
     });
   }
 
@@ -59,13 +61,24 @@ class API {
 
     if (lst.length !== 0)
       url = url + '?' + lst.join('&');
-
       axios.get(url, { headers: { auth: JSON.stringify(auth) }, ...params }).then(res => {
-      if (res.data.error) return callback(res.data.error);
+      if (res.data.error) {
+        return callback(res.data.error);
+      }
       callback(null, res.data.result);
     }).catch(err => {
-      callback(err.message);
+        callback(this.createError(err))
     })
+  }
+
+  createError (err) {
+    let message = err.message;
+    var status = 0;
+    if (err.message !== 'Network Error'){
+      status = err.response.status;
+    }else
+     status = 901 //check network error code
+    return {status, message};
   }
 
   registerPremiumUser(data, callback) {
