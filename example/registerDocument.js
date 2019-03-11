@@ -2,7 +2,7 @@
 const { Sproof, Registration }  = require('../index.js');
 
 let sproof = new Sproof({
-  uri: 'https://api.sproof.it/',
+  uri: 'https://api.sproof.io/',
 });
 
 let credentials = sproof.newAccount();

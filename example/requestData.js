@@ -1,7 +1,7 @@
 const {Sproof}  = require('../index.js');
+const config  = require ('./config/config_receiver');
 
-let sproof = new Sproof({uri: 'https://api.sproof.it/'});
-sproof.newAccount();
+let sproof = new Sproof(config);
 
 //sproof.on('setting:update', console.log);
 
@@ -17,4 +17,4 @@ let logResponse = (err,res) => err ? console.log(err) : console.log(res);
 // sproof.getProfiles({id: '0x86ec4f0b4e8ecc2f13f8ad86d9f6c2db30648b96'}, logResponse);
 // sproof.getReceivers({}, logResponse);
 // sproof.getState({}, logResponse);
-sproof.getRegistrations({per_page: 50}, logResponse);
+sproof.getRegistrations({per_page: 1}, logResponse);

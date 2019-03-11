@@ -5,7 +5,16 @@ const Api = require ('./api');
 
 class Sproof {
   constructor(config = {}) {
+
+    if (config.credentials){
+      if (!config.credentials.privateKey && config.credentials.sproofCode){
+        let credentials = utils.restoreCredentials(config.credentials.sproofCode);
+        config.credentials = {...config.credentials, ...credentials }
+      }
+    }
+
     this.config = config;
+
     this.events = [];
 
     this.message = new Message(config, this);
