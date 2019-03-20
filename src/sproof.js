@@ -3,6 +3,7 @@ const Receiver = require ('./receiver');
 const Message = require ('./message');
 const Api = require ('./api');
 
+
 class Sproof {
   constructor(config = {}) {
 

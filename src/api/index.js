@@ -2,6 +2,8 @@ const axios = require('axios');
 const io = require('socket.io-client');
 const utils = require('sproof-utils');
 
+const FormData = require('form-data');
+
 class API {
   constructor(config = {}){
     this.config = config;
@@ -28,25 +30,45 @@ class API {
     this.io.on(event, fun);
   }
 
-  post(url, data, callback) {
+  post(url, data, callback, formdata) {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
     let credentials = this.createCredentials(this.config.credentials);
-
-    axios.post(url, {...data, credentials}).then(res => {
-      if (res.data.error) {
-        return callback(res.data.error);
-      }
-      return callback(null, res.data.result);
-    }).catch(err => {
-      callback(this.createError(err))
-    });
+      axios.post(url, {...data, credentials}).then(res => {
+        if (res.data.error) {
+          return callback(res.data.error);
+        }
+        return callback(null, res.data.result);
+      }).catch(err => {
+        callback(this.createError(err))
+      });
   }
 
   uploadFile(buf, callback){
-    this.post('storage/upload', {file: buf}, callback);
+    let credentials = this.createCredentials(this.config.credentials);
+
+    const formData = new FormData();
+    formData.append('file', buf, {filename: 'file'});
+    // this.sendFormData('storage/upload', formData, callback, true);
+    axios({
+      method: 'post',
+      url: 'http://localhost:3002/api/v1/storage/upload',
+      data: {file: formData},
+      config: { headers: {'Content-Type': 'multipart/form-data' }}
+    })
+      .then(function (res) {
+        if (res.data.error) {
+          return callback(res.data.error);
+        }
+        return callback(null, res.data.result);
+      })
+      .catch(function (err) {
+        callback(this.createError(err))
+      });
   }
+
+
 
   get(url, params, callback) {
     url = this.versionpath + url;
