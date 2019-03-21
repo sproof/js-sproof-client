@@ -46,6 +46,10 @@ class API {
   }
 
   uploadFile(buf, callback){
+    let url = 'storage/upload';
+    url =  this.versionpath + url;
+    url = this.config.uri ? `${this.config.uri}${url}` : url;
+
     let credentials = this.createCredentials(this.config.credentials);
 
     const formData = new FormData();
@@ -53,17 +57,17 @@ class API {
     // this.sendFormData('storage/upload', formData, callback, true);
     axios({
       method: 'post',
-      url: 'http://localhost:3002/api/v1/storage/upload',
-      data: {file: formData},
+      url,
+      data: {file: formData, credentials},
       config: { headers: {'Content-Type': 'multipart/form-data' }}
     })
-      .then(function (res) {
+      .then((res) => {
         if (res.data.error) {
           return callback(res.data.error);
         }
         return callback(null, res.data.result);
       })
-      .catch(function (err) {
+      .catch((err) => {
         callback(this.createError(err))
       });
   }
@@ -97,7 +101,7 @@ class API {
     let message = err.message;
     var status = 0;
     if (err.message !== 'Network Error'){
-      status = err.response.status;
+      status = err.response ? err.response.status : 501;
     }else
      status = 901 //check network error code
     return {status, message};
