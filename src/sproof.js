@@ -171,6 +171,7 @@ class Sproof {
         let { hash, rawTransaction, message } = res;
         let { transactionHash, signedTx } = utils.signTx(rawTransaction, this.config.credentials.privateKey);
         this.api.submit(this.events, signedTx, transactionHash, (err, res) => {
+
           if (res && res.blockHash)
             this.events = [];
 
