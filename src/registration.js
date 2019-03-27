@@ -11,7 +11,7 @@ class Registration {
       receivers: []
     };
 
-    let {documentHash, data, validFrom, validUntil, name, locationHash} = params;
+    let {dependencies, receiverAttributes,  receivers, documentHash, data, validFrom, validUntil, name, locationHash} = params;
 
     this.state = {
       ...defaultState,
@@ -19,8 +19,11 @@ class Registration {
       validFrom,
       validUntil,
       locationHash,
+      dependencies,
       name,
-      data
+      data,
+      receiverAttributes,
+      receivers
     }
   }
 
