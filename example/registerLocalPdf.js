@@ -1,5 +1,5 @@
 const { Sproof, Registration }  = require('../index.js');
-const config = require ('./config/config_issuer');
+const config = require ('./config/config_receiver');
 const fs = require('fs');
 
 let sproof = new Sproof(config)
@@ -13,7 +13,7 @@ sproof.uploadFile(data, (err,res) => { //upload file to ipfs
 
     let registration  = new Registration({
       documentHash,
-      name: 'mytestpdf',
+      name: 'mytest',
       locationHash: res.hash, //add ipfs location hash
       validFrom: undefined, //unix timestamp
       validUntil: undefined, //unix timestamp
