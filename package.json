@@ -52,6 +52,6 @@
     "sproof-utils": "^0.0.8",
     "sproof-schema": "^0.0.6",
     "form-data": "^2.3.3",
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.14"
   }
 }
