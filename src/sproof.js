@@ -239,7 +239,7 @@ class Sproof {
     if (this.events.length > 0)
       console.info(`Notice: Not all events are committed, your are only allowed to commit ${this.maxEvents} events at once.`);
 
-    this.buildEvent(this.events, (err, builtEvents) => {
+    this.buildEvent(eventsToCommit, (err, builtEvents) => {
       if (err) {
         this.events = [...eventsToCommit, ...this.events];
         return callback(err);

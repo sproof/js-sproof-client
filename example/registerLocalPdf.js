@@ -1,8 +1,8 @@
 const { Sproof, Registration }  = require('../index.js');
-const config = require ('./config/config_receiver');
+const config = require ('./config/config_issuer');
 const fs = require('fs');
 
-let sproof = new Sproof(config)
+let sproof = new Sproof(config);
 
 
 let data = fs.readFileSync('./example.pdf');
@@ -21,7 +21,7 @@ sproof.uploadFile(data, (err,res) => { //upload file to ipfs
 
     sproof.registerDocument(registration);
 
-    sproof.commitPremium((err, res) => {
+    sproof.commit((err, res) => {
       if (err) console.error(err);
       else console.log(res);
     });
