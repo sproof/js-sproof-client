@@ -1,15 +1,16 @@
 var expect    = require('chai').expect;
 const Receiver = require('../src/receiver');
-const utils = require ('sproof-utils');
 
-const account = {
-  address: "a03cb2e3ec12dfaf8688b876a4143225a0c64d15",
-  privateKey : 'c63f0cf10932d15b5f24a22e247ee8639dae7502655cc032edc9279a2f602fb4',
-  publicKey : '2ab25035b3d357215c7d7656c9f3fa2d37a25e26dd0c75169dadb5b9292dfed3004b3094c8b4a5ba56e4550d77fabc1cc6d678b38e2ab33dfae96daaae3d0c8e'
-};
+
+var account = {
+  mnemonic: 'a b c d e f g h i j k l1',
+  address: "0x7f3eabdeca6f6410907bf8adf2c4a3ddddefaf54",
+  privateKey: '0x21534e62b8fe4daf4c0ddf28f1c941adcb01ed04b723ecdb67925456c690d2a5',
+  publicKey: '0x7af08ec04de44c0f8fa9da8f8577229527903c15ae48c9df5f8a175b134e9c8c63b69e226f6c02dbf3d501e2cedd31e30ffc6e73833c2b1e11df03611ef2d344'
+}
 
 describe('receiver', () => {
-  describe('Create receiver', () => {
+  it('Create receiver', () => {
     let receiver = new Receiver({address : account.address, validUntil: Math.round(new Date().getTime()/1000) });
     receiver.addAttribute('name','Max Mustermann');
     receiver.addAttribute('dateOfBirth', '01011990');
@@ -24,10 +25,11 @@ describe('receiver', () => {
     let restoredReceiver = Receiver.restore(r);
 
     expect(id).to.equal(restoredReceiver.getId());
+
     expect(validationResult.valid).to.be.true
   });
 
-  describe('Create receiver with no attributes', () => {
+  it('Create receiver with no attributes', () => {
     let receiver = new Receiver({address : account.address, validUntil: Math.round(new Date().getTime()/1000) });
 
     let id = receiver.getId();

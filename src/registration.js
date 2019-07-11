@@ -48,6 +48,7 @@ class Registration {
   toJSON() {
     return this.state;
   }
+
 }
 
 module.exports = Registration;

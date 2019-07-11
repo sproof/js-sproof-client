@@ -7,7 +7,7 @@ let sproof = new Sproof({
 
 let credentials = sproof.newAccount();
 
-let registerProfileEvent = sproof.registerProfile({
+sproof.registerProfile({
   name: 'new sproof account 1',
   profileText: 'Sproof Test Account',
   image: 'Qma34dB4B4N4eS5ibBkwtjTSTNCRdJrVY6E25DFuFuU8Sd',

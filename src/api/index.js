@@ -15,11 +15,13 @@ class API {
   createCredentials (credentials) {
     let signature;
 
+    let timestamp = Math.round(new Date().getTime()/1000);
     if (credentials.address)
-      signature = utils.sign(credentials.address, credentials.privateKey);
+      signature = utils.sign(credentials.address+":"+timestamp, credentials.privateKey);
 
     return {
       address: credentials.address,
+      timestamp,
       signature
     }
   }
@@ -30,14 +32,14 @@ class API {
     this.io.on(event, fun);
   }
 
-  post(url, data, callback, formdata) {
+  post(url, data, callback) {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
     let credentials = this.createCredentials(this.config.credentials);
       axios.post(url, {...data, credentials}).then(res => {
         if (res.data.error) {
-          return callback(res.data.error);
+          return callback({message: res.data.error, status: res.status});
         }
         return callback(null, res.data.result);
       }).catch(err => {
@@ -63,7 +65,7 @@ class API {
     })
       .then((res) => {
         if (res.data.error) {
-          return callback(res.data.error);
+          return callback({message: res.data.error, status: res.status});
         }
         return callback(null, res.data.result);
       })
@@ -75,13 +77,18 @@ class API {
 
 
   get(url, params, callback) {
+
+    let uri = this.config.uri;
+
+    if (url === 'verification' && this.config.verificationUri) uri = this.config.verificationUri;
+
     url = this.versionpath + url;
-    url = this.config.uri ? `${this.config.uri}${url}` : url;
+    url = uri ? `${uri}${url}` : url;
     url = `${url}${params.id ? `/${params.id}/` : '' }`;
     delete params.id;
 
     let auth = this.createCredentials(this.config.credentials);
-    params = {...params}
+    params = {...params};
 
     let lst = Object.keys(params).map(k => `${k}=${params[k]}`);
 
@@ -89,21 +96,28 @@ class API {
       url = url + '?' + lst.join('&');
       axios.get(url, { headers: { auth: JSON.stringify(auth) }, ...params }).then(res => {
       if (res.data.error) {
-        return callback(res.data.error);
+        return callback({message: res.data.error, status: res.status});
       }
-      callback(null, res.data.result);
+      return callback(null, res.data.result);
     }).catch(err => {
         callback(this.createError(err))
     })
   }
 
   createError (err) {
-    let message = err.message;
-    var status = 0;
-    if (err.message !== 'Network Error'){
-      status = err.response ? err.response.status : 501;
-    }else
-     status = 901 //check network error code
+    let status, message;
+
+    if (err.response && err.response.data){
+      message = err.response.data.error;
+      status = err.response.status;
+    }else {
+      status = err.code;
+      message = err.message;
+    }
+
+    status = status || 500;
+    message = message || err.toString();
+
     return {status, message};
   }
 
@@ -119,16 +133,16 @@ class API {
     this.get('storage/status', callback);
   }
 
-  getRawTransaction (events, callback) {
-    this.post('storage/transaction', {events, address: this.config.credentials.address }, callback);
+  getRawTransaction (eventContainer, callback) {
+    this.post('storage/transaction', {eventContainer, address: this.config.credentials.address }, callback);
   }
 
-  submit (events, signedTx, transactionHash, callback) {
-    this.post('storage/submit', {events, signedTx, transactionHash}, callback);
+  submit (eventContainer, signedTx, transactionHash, callback) {
+    this.post('storage/submit', {eventContainer, signedTx, transactionHash}, callback);
   }
 
-  submitPremium(events, from,  hash, signature, callback) {
-    this.post('storage/premium/submit', {events, hash, from, signature}, callback);
+  submitPremium(eventContainer, from,  hash, dhtHash, signature, callback) {
+    this.post('storage/premium/submit', {eventContainer, hash, dhtHash, from, signature}, callback);
   }
 }
 

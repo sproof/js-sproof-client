@@ -2,6 +2,8 @@ const utils = require ('sproof-utils');
 const Receiver = require ('./receiver');
 const Message = require ('./message');
 const Api = require ('./api');
+const _ = require ('lodash');
+const eventsSchema = require ('sproof-schema').eventsSchema;
 
 
 class Sproof {
@@ -14,6 +16,10 @@ class Sproof {
       }
     }
 
+
+    this.maxBulkEntries = (eventsSchema.properties.events.items.oneOf.find(e => e.title === 'Register multiple documents')).properties.data.maxItems;
+    this.maxEvents = eventsSchema.properties.events.maxItems;
+
     this.config = config;
 
     this.events = [];
@@ -23,13 +29,14 @@ class Sproof {
 
     this.getHash = utils.getHash;
     this.getCredentials = utils.getCredentials;
+    this.getSalt = utils.getSalt;
 
   }
 
   registerProfile(data){
     this.addEvent({
       eventType: 'PROFILE_REGISTER',
-      data
+      data : {...data, publicKey: this.config.credentials.publicKey}
     });
     return data;
   }
@@ -70,6 +77,16 @@ class Sproof {
     })
   }
 
+  registerDocumentBulk(document) {
+    let registerBulk = _.findLast(this.events, e => e.eventType === 'DOCUMENT_REGISTER_BULK');
+
+    if (!registerBulk || registerBulk.data.length > this.maxBulkEntries){
+      registerBulk = {eventType : 'DOCUMENT_REGISTER_BULK', data: []};
+      this.addEvent(registerBulk);
+    }
+    registerBulk.data.push(document.toJSON());
+  }
+
   revokeDocument(documentHash, reason) {
     this.addEvent({
       eventType: 'DOCUMENT_REVOKE',
@@ -100,14 +117,22 @@ class Sproof {
     })
   }
 
-
   addEvent(event){
     this.events.push(event);
   }
 
   registerPremiumUser(data, callback){
-    this.api.registerPremiumUser(data,callback);
+    this.api.registerPremiumUser(data, callback);
   }
+
+  getRegistrationInfos(registration){
+      return {
+        hash: registration.state.documentHash,
+        location: registration.state.locationHash,
+        id: utils.getHash(`${this.config.credentials.address}:${registration.state.documentHash}`)
+      }
+  }
+
 
   getUser(callback) {
     this.api.get('user', {}, callback);
@@ -127,6 +152,14 @@ class Sproof {
 
   getProfiles(params = {}, callback) {
     this.api.get('profiles', params, callback);
+  }
+
+  getTransactionCount(address, callback) {
+    this.getProfiles({id: address}, (err, res) => {
+      if (err && err.status == 404) return callback(null, {transactionCount: 0});
+      if (err) return callback(err);
+      return callback(null, {transactionCount: res.counts.transactions});
+    });
   }
 
   getReceivers(params, callback) {
@@ -149,38 +182,86 @@ class Sproof {
     this.api.on(event,fun)
   }
 
+  buildEvent(events, callback) {
+    this.getTransactionCount (this.config.credentials.address, (err, res) => {
+      if (err) return callback(err);
+      let nonce = res.transactionCount + 1;
+      callback(null, {
+        events,
+        nonce,
+        version: this.config.version,
+        chainId: this.config.chainId,
+        chain: this.config.chain,
+        from: this.config.credentials.address
+      })
+    })
+  }
+
+
   commitPremium(callback){
-    this.api.getHash(this.events, (err, res) => {
-        if (err) return callback(err);
-        else {
-          let { hashToRegister, hash } = res;
-          let signature = utils.sign(hashToRegister, this.config.credentials.privateKey);
-          this.api.submitPremium(this.events, this.config.credentials.address, hashToRegister, signature, (err, res) => {
-              if (err) return callback(err);
-              this.events = [];
-              return callback(null, {...res, hash});
-          });
-        }
+    let eventsToCommit = _.take(this.events, this.maxEvents);
+    this.events = _.drop(this.events, this.maxEvents);
+
+    if (this.events.length > 0)
+      console.info(`Notice: Not all events are committed, your are only allowed to commit ${this.maxEvents} events at once.`);
+
+
+    this.buildEvent(eventsToCommit, (err, builtEvents) => {
+      if (err) {
+        this.events = [...eventsToCommit, ...this.events];
+        return callback(err);
+      }
+
+      this.api.getHash(builtEvents, (err, res) => {
+          if (err) {
+            this.events = [...eventsToCommit, ...this.events];
+            return callback(err);
+          }
+          else {
+            let { hashToRegister, hash } = res;
+            let signature = utils.sign(hashToRegister, this.config.credentials.privateKey);
+            this.api.submitPremium(builtEvents, this.config.credentials.address, hashToRegister, hash, signature, (err, res) => {
+                if (err) {
+                  this.events = [...eventsToCommit, ...this.events];
+                  return callback(err);
+                }
+                return callback(null, {...res, hash});
+            });
+          }
+      });
     });
   }
 
   commit(callback){
-    this.api.getRawTransaction(this.events, (err, res) => {
-      if (err) return callback(err);
-      else {
-        let { hash, rawTransaction, message } = res;
-        let { transactionHash, signedTx } = utils.signTx(rawTransaction, this.config.credentials.privateKey);
-        this.api.submit(this.events, signedTx, transactionHash, (err, res) => {
+    let eventsToCommit = _.take(this.events, this.maxEvents);
+    this.events = _.drop(this.events, this.maxEvents);
 
-          if (res && res.blockHash)
-            this.events = [];
+    if (this.events.length > 0)
+      console.info(`Notice: Not all events are committed, your are only allowed to commit ${this.maxEvents} events at once.`);
 
-          callback(err,res);
-        });
-        //let signature = utils.sign(hashToRegister, this.config.credentials.privateKey);
-        //this._submit(this.events, hashToRegister, signature, callback);
+    this.buildEvent(this.events, (err, builtEvents) => {
+      if (err) {
+        this.events = [...eventsToCommit, ...this.events];
+        return callback(err);
       }
-    });
+
+      this.api.getRawTransaction(builtEvents, (err, res) => {
+        if (err) {
+          this.events = [...eventsToCommit, ...this.events];
+          return callback(err);
+        }
+        else {
+          let { hash, rawTransaction, message } = res;
+          let { transactionHash, signedTx } = utils.signTx(rawTransaction, this.config.credentials.privateKey);
+
+          this.api.submit(builtEvents, signedTx, transactionHash, (err, res) => {
+            if (err)
+              this.events = [...eventsToCommit, ...this.events];
+            callback(err,res);
+          });
+        }
+      });
+    })
   }
 
   newAccount() {
@@ -215,6 +296,16 @@ class Sproof {
   uploadFile(buf, callback) {
     this.api.uploadFile(buf, callback);
   }
+
+  uploadFilePromise(buf) {
+    return new Promise((resolve,reject) => {
+      this.api.uploadFile(buf, (err, res) => {
+        if (err) reject(err);
+        else resolve(res);
+      })
+    })
+  }
+
 }
 
 module.exports = Sproof;
