@@ -72,7 +72,8 @@ class Sproof {
     this.addEvent({
       eventType: 'DOCUMENT_REGISTER',
       data: {
-        ...document.toJSON()
+        ...document.toJSON(),
+        documentId: document.getId()
       }
     })
   }
@@ -84,7 +85,7 @@ class Sproof {
       registerBulk = {eventType : 'DOCUMENT_REGISTER_BULK', data: []};
       this.addEvent(registerBulk);
     }
-    registerBulk.data.push(document.toJSON());
+    registerBulk.data.push({...document.toJSON(), documentId: document.getId()});
   }
 
   revokeDocument(documentHash, reason) {
@@ -220,12 +221,16 @@ class Sproof {
           else {
             let { hashToRegister, hash } = res;
             let signature = utils.sign(hashToRegister, this.config.credentials.privateKey);
+
+            let eventsInfo = this.listEvents(builtEvents, null, hash);
+
+
             this.api.submitPremium(builtEvents, this.config.credentials.address, hashToRegister, hash, signature, (err, res) => {
                 if (err) {
                   this.events = [...eventsToCommit, ...this.events];
                   return callback(err);
                 }
-                return callback(null, {...res, hash});
+                return callback(null, {...res, ...eventsInfo});
             });
           }
       });
@@ -254,14 +259,38 @@ class Sproof {
           let { hash, rawTransaction, message } = res;
           let { transactionHash, signedTx } = utils.signTx(rawTransaction, this.config.credentials.privateKey);
 
+          let eventsInfo = this.listEvents(builtEvents, transactionHash, hash);
+
           this.api.submit(builtEvents, signedTx, transactionHash, (err, res) => {
             if (err)
               this.events = [...eventsToCommit, ...this.events];
-            callback(err,res);
+            callback(err,{...res, ...eventsInfo});
           });
         }
       });
     })
+  }
+
+  listEvents(builtEvents, txHash, dhtHash){
+    let transactionId;
+    txHash = txHash || undefined;
+    if (txHash){
+      txHash = txHash.toLowerCase();
+      transactionId = this.getHash(`${txHash}:${dhtHash}`);
+    }
+
+    return {
+      ...builtEvents,
+      transactionHash: txHash,
+      dhtHash: dhtHash,
+      transactionId: transactionId,
+      events: builtEvents.events.map((e, i) => {
+        return {
+          ...e,
+          eventId: transactionId ? this.getHash(`${transactionId}:${i}`) : undefined
+      }
+    })
+    }
   }
 
   newAccount() {
