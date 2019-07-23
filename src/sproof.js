@@ -73,7 +73,7 @@ class Sproof {
       eventType: 'DOCUMENT_REGISTER',
       data: {
         ...document.toJSON(),
-        documentId: document.getId()
+        documentId: document.getId(this.config.credentials.address)
       }
     })
   }
@@ -85,7 +85,7 @@ class Sproof {
       registerBulk = {eventType : 'DOCUMENT_REGISTER_BULK', data: []};
       this.addEvent(registerBulk);
     }
-    registerBulk.data.push({...document.toJSON(), documentId: document.getId()});
+    registerBulk.data.push({...document.toJSON(), documentId: document.getId(this.config.credentials.address)});
   }
 
   revokeDocument(documentHash, reason) {
@@ -171,12 +171,11 @@ class Sproof {
     this.api.get('registrations', params, callback);
   }
 
-  getDocuments(params, callback) {
-    this.api.get('documents', params, callback);
-  }
-
-  getValidation(id, callback) {
-    this.api.get('verification', {id}, callback);
+  getValidation(id, verificationProfile, callback) {
+    if (typeof verificationProfile === "function") {
+      callback = verificationProfile;
+    }
+    this.api.get('verification', {id, verificationProfile}, callback);
   }
 
   on (event, fun) {
@@ -213,7 +212,7 @@ class Sproof {
         return callback(err);
       }
 
-      this.api.getHash(builtEvents, (err, res) => {
+      this.api.getHashForEvents(builtEvents, (err, res) => {
           if (err) {
             this.events = [...eventsToCommit, ...this.events];
             return callback(err);

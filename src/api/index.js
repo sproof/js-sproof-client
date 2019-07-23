@@ -125,7 +125,7 @@ class API {
     this.post('user/register', data, callback);
   }
 
-  getHash (data, callback) {
+  getHashForEvents (data, callback) {
     this.post('storage/hash', {data}, callback);
   }
 
