@@ -2,6 +2,8 @@ const utils = require ('sproof-utils');
 const Receiver = require ('./receiver');
 const Message = require ('./message');
 const Api = require ('./api');
+const User = require ('./user');
+
 const _ = require ('lodash');
 const eventsSchema = require ('sproof-schema').eventsSchema;
 
@@ -26,6 +28,7 @@ class Sproof {
 
     this.message = new Message(config, this);
     this.api = new Api(config);
+    this.user = new User(config);
 
     this.getHash = utils.getHash;
     this.getCredentials = utils.getCredentials;
@@ -120,6 +123,7 @@ class Sproof {
 
   addEvent(event){
     this.events.push(event);
+    return event;
   }
 
   registerPremiumUser(data, callback){
