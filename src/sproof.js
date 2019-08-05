@@ -36,24 +36,24 @@ class Sproof {
 
   }
 
-  registerProfile(data){
-    this.addEvent({
+  registerProfile(data, publicKey){
+    return this.addEvent({
       eventType: 'PROFILE_REGISTER',
-      data : {...data, publicKey: this.config.credentials.publicKey}
+      data : {...data, publicKey: publicKey || this.config.credentials.publicKey}
     });
     return data;
   }
 
 
   updateProfile(data){
-    this.addEvent({
+    return this.addEvent({
       eventType: 'PROFILE_UPDATE',
       data
     });
   }
 
   confirmProfile(profileId, value){
-    this.addEvent({
+    return this.addEvent({
       eventType: 'PROFILE_CONFIRM',
       data :{
         to: profileId,
@@ -63,7 +63,7 @@ class Sproof {
   }
 
   revokeProfile(reason){
-    this.addEvent({
+    return this.addEvent({
       eventType: 'PROFILE_REVOKE',
       data :{
         reason
@@ -72,7 +72,7 @@ class Sproof {
   }
 
   registerDocument(document) {
-    this.addEvent({
+    return this.addEvent({
       eventType: 'DOCUMENT_REGISTER',
       data: {
         ...document.toJSON(),
@@ -89,10 +89,12 @@ class Sproof {
       this.addEvent(registerBulk);
     }
     registerBulk.data.push({...document.toJSON(), documentId: document.getId(this.config.credentials.address)});
+
+    return registerBulk;
   }
 
   revokeDocument(documentHash, reason) {
-    this.addEvent({
+    return this.addEvent({
       eventType: 'DOCUMENT_REVOKE',
       data: {
         reason,
@@ -102,7 +104,7 @@ class Sproof {
   }
 
   addDocumentReceiver(documentHash, receiverId){
-    this.addEvent({
+    return this.addEvent({
       eventType: 'DOCUMENT_RECEIVER_ADD',
       data: {
         documentHash,
@@ -112,7 +114,7 @@ class Sproof {
   }
 
   revokeDocumentReceiver(receiverId, reason) {
-    this.addEvent({
+    return this.addEvent({
       eventType: 'DOCUMENT_RECEIVER_REVOKE',
       data: {
         receiverId,
@@ -178,8 +180,15 @@ class Sproof {
   getValidation(id, verificationProfile, callback) {
     if (typeof verificationProfile === "function") {
       callback = verificationProfile;
+      verificationProfile = undefined;
     }
-    this.api.get('verification', {id, verificationProfile}, callback);
+
+    let params = {id};
+
+    if (verificationProfile)
+      params['verificationProfile'] = verificationProfile
+
+    this.api.get('verification', params, callback);
   }
 
   on (event, fun) {
@@ -200,6 +209,9 @@ class Sproof {
       })
     })
   }
+
+
+
 
 
   commitPremium(callback){
@@ -223,6 +235,8 @@ class Sproof {
           }
           else {
             let { hashToRegister, hash } = res;
+
+
             let signature = utils.sign(hashToRegister, this.config.credentials.privateKey);
 
             let eventsInfo = this.listEvents(builtEvents, null, hash);
@@ -306,6 +320,44 @@ class Sproof {
       let credentials = utils.restoreCredentials(mnemonic);
       this.config.credentials = credentials;
       return credentials;
+  }
+
+  setEncryptedSproofCode(encryptedMnemonic, passphrase){
+    try{
+      let mnemonic = utils.decryptAES(passphrase, encryptedMnemonic);
+      if (mnemonic.split(' ').length == 12) {
+        let credentials = utils.restoreCredentials(mnemonic);
+        this.config.credentials = {...this.config.credentials, ...credentials}
+        return true;
+      }
+    }catch (err) {return false}
+    return false;
+  }
+
+  decryptMnemonic(encryptedMnemonic, passphrase){
+    try{
+      let mnemonic = utils.decryptAES(passphrase, encryptedMnemonic);
+      if (mnemonic.split(' ').length == 12) {
+        return mnemonic
+      }
+    }catch (err) {return false}
+    return false;
+  }
+
+  encryptMnemonic(mnemonic, passphrase) {
+    return utils.encryptAES(passphrase, mnemonic);
+  }
+
+  removeSproofCode(){
+    this.config.credentials.privateKey = undefined;
+    this.config.credentials.mnemonic = undefined;
+
+  }
+
+  getWebAppPublicKey(){
+    let ec =  utils.getEncryptedCredentials(this.config.credentials.sproofCode, 'not needed here');
+    delete ec.encryptedMnemonic;
+    return JSON.stringify(ec);
   }
 
   verify(sharedReceiver, callback) {

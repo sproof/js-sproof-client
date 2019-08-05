@@ -52,16 +52,20 @@ class API {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    let credentials = this.createCredentials(this.config.credentials);
+    let auth = this.config.credentials && this.config.credentials.privateKey && this.createCredentials(this.config.credentials);
+
 
     const formData = new FormData();
+
     formData.append('file', buf, {filename: 'file'});
+    let fd = buf.name ? formData : { file: formData }
+
     // this.sendFormData('storage/upload', formData, callback, true);
     axios({
       method: 'post',
       url,
-      data: {file: formData, credentials},
-      config: { headers: {'Content-Type': 'multipart/form-data' }}
+      data: fd,
+      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)  }}
     })
       .then((res) => {
         if (res.data.error) {
@@ -87,7 +91,7 @@ class API {
     url = `${url}${params.id ? `/${params.id}/` : '' }`;
     delete params.id;
 
-    let auth = this.createCredentials(this.config.credentials);
+    let auth = this.config.credentials && this.config.credentials.privateKey && this.createCredentials(this.config.credentials);
     params = {...params};
 
     let lst = Object.keys(params).map(k => `${k}=${params[k]}`);

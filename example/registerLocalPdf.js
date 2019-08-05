@@ -7,8 +7,10 @@ let sproof = new Sproof(config);
 
 let data = fs.readFileSync('./example.pdf');
 
+
 sproof.uploadFile(data, (err,res) => { //upload file to ipfs
   if (res) {
+    console.log(res)
     let documentHash = sproof.getHash(data); //calculate hash of the file
 
     let registration  = new Registration({

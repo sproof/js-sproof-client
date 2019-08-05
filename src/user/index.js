@@ -9,8 +9,7 @@ class API {
     this.config = config;
     this.io = null;
     this.versionpath = 'api/v1/';
-    this.sessionToken = null;
-    this.email = null;
+    this.credentials;
   }
 
   //
@@ -21,16 +20,19 @@ class API {
   // }
 
   setSessionCredentials(email, sessionToken) {
-    this.sessionToken = sessionToken;
-    this.email = email;
+    this.credentials = {
+      sessionToken,
+      email
+    };
   }
 
   post(url, data, callback) {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    //let credentials = this.createCredentials(this.config.credentials);
-    axios.post(url, {...data }).then(res => {
+    let credentials = this.credentials;
+
+    axios.post(url, {...data, credentials : credentials }).then(res => {
       if (res.data.error) {
         return callback({message: res.data.error, status: res.status});
       }
@@ -39,35 +41,17 @@ class API {
       callback(this.createError(err))
     });
   }
-
-  delete(url, data, callback) {
-    url =  this.versionpath + url;
-    url = this.config.uri ? `${this.config.uri}${url}` : url;
-
-    //let credentials = this.createCredentials(this.config.credentials);
-    axios.delete(url, {...data }).then(res => {
-      if (res.data.error) {
-        return callback({message: res.data.error, status: res.status});
-      }
-      return callback(null, res.data.result);
-    }).catch(err => {
-      callback(this.createError(err))
-    });
-  }
-
 
   get(url, params, callback) {
 
     let uri = this.config.uri;
-
-    if (url === 'verification' && this.config.verificationUri) uri = this.config.verificationUri;
 
     url = this.versionpath + url;
     url = uri ? `${uri}${url}` : url;
     url = `${url}${params.id ? `/${params.id}/` : '' }`;
     delete params.id;
 
-    let auth = this.createCredentials(this.config.credentials);
+    let auth = this.credentials;
     params = {...params};
 
     let lst = Object.keys(params).map(k => `${k}=${params[k]}`);
@@ -83,6 +67,56 @@ class API {
       callback(this.createError(err))
     })
   }
+
+  delete(url, id, callback) {
+    url =  this.versionpath + url;
+    url = this.config.uri ? `${this.config.uri}${url}` : url;
+
+    let auth = this.credentials;
+
+    if (id) url = url+`/${id}`
+
+    axios.delete(url, { headers: {auth: JSON.stringify(auth) }}).then(res => {
+      if (res.data.error) {
+        return callback({message: res.data.error, status: res.status});
+      }
+      return callback(null, res.data.result);
+    }).catch(err => {
+      callback(this.createError(err))
+    });
+  }
+
+
+
+  uploadFile(buf, callback){
+    let url = 'storage/upload';
+    url =  this.versionpath + url;
+    url = this.config.uri ? `${this.config.uri}${url}` : url;
+
+    let credentials = this.credentials;
+
+    const formData = new FormData();
+
+    formData.append('file', buf, {filename: 'file'});
+    let fd = buf.name ? formData : { file: formData }
+
+    axios({
+      method: 'post',
+      url,
+      data: fd,
+      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(this.credentials) }}
+    })
+      .then((res) => {
+        if (res.data.error) {
+          return callback({message: res.data.error, status: res.status});
+        }
+        return callback(null, res.data.result);
+      })
+      .catch((err) => {
+        callback(this.createError(err))
+      });
+  }
+
 
   createError (err) {
     let status, message;
@@ -135,17 +169,39 @@ class API {
   }
 
   addEvent(event, callback) {
-    this.post('user/event', event, callback);
+    this.post('user/event', {event}, callback);
   }
 
-  deleteEvent(event, callback) {
-    this.delete('user/event', event, callback);
+  deleteEvent(hash, callback) {
+    this.delete('user/event', hash, callback);
   }
 
   getUser(callback) {
-
+    this.get('user', {}, callback);
   }
 
+  createKey(passphrase, callback) {
+    let ec = utils.createEncryptedCredentials(passphrase);
+    this.post('user/key', {...ec}, callback);
+  }
+
+  setExistingMnemonic(mnemonic, passphrase, callback) {
+    let ec = utils.getEncryptedCredentials(mnemonic, passphrase);
+    this.post('user/key', {...ec}, callback);
+  }
+
+  setExistingPublicKey(data, callback){
+    this.post('user/key', {...data}, callback);
+  }
+
+
+  deleteKey (callback){
+    this.delete('user/key', null, callback);
+  }
+
+  updateEncryptedMnemonic (encryptedMnemonic, callback){
+    this.post('user/key', {encryptedMnemonic}, callback);
+  }
 
 
   // getHashForEvents (data, callback) {

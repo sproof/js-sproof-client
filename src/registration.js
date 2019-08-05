@@ -11,7 +11,7 @@ class Registration {
       receivers: []
     };
 
-    let {dependencies, receiverAttributes,  receivers, documentHash, data, validFrom, validUntil, name, locationHash} = params;
+    let {dependencies, receiverAttributes,  receivers, documentType, documentHash, data, validFrom, validUntil, name, locationHash} = params;
 
     this.state = {
       ...defaultState,
@@ -21,6 +21,7 @@ class Registration {
       locationHash,
       dependencies,
       name,
+      documentType,
       data,
       receiverAttributes,
       receivers
@@ -33,8 +34,8 @@ class Registration {
     this.state.receivers.push(receiver.getId());
   }
 
-  getId(issuer) {
-    return utils.getHash(`${issuer}:${this.state.documentHash}`);
+  getId(profile) {
+    return utils.getHash(`${profile}:${this.state.documentHash}`);
   }
 
   removeReceiver (receiver) {
