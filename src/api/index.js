@@ -60,12 +60,14 @@ class API {
     formData.append('file', buf, {filename: 'file'});
     let fd = buf.name ? formData : { file: formData }
 
+    console.log(buf.length);
+
     // this.sendFormData('storage/upload', formData, callback, true);
     axios({
       method: 'post',
       url,
       data: fd,
-      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)  }}
+      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)  } }
     })
       .then((res) => {
         if (res.data.error) {

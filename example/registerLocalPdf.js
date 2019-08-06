@@ -5,7 +5,8 @@ const fs = require('fs');
 let sproof = new Sproof(config);
 
 
-let data = fs.readFileSync('./example.pdf');
+//let data = fs.readFileSync('./example.pdf');
+let data = fs.readFileSync('./bilder1.zip');
 
 
 sproof.uploadFile(data, (err,res) => { //upload file to ipfs
