@@ -60,14 +60,12 @@ class API {
     formData.append('file', buf, {filename: 'file'});
     let fd = buf.name ? formData : { file: formData }
 
-    console.log(buf.length);
-
     // this.sendFormData('storage/upload', formData, callback, true);
     axios({
       method: 'post',
       url,
       data: fd,
-      maxContentLength: 15728640, // 15MB
+      maxContentLength: 50 * 1024 * 1024, // 50MB
       config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)  } }
     })
       .then((res) => {
