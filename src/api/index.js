@@ -67,6 +67,7 @@ class API {
       method: 'post',
       url,
       data: fd,
+      maxContentLength: 15728640, // 15MB
       config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)  } }
     })
       .then((res) => {
