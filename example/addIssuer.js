@@ -11,10 +11,10 @@ let sproof = new Sproof(config_issuer);
 // process.exit(1);
 
 
-let registerProfileEvent = sproof.registerProfile({
-  name: 'new sproof account',
-  profileText: 'Sproof Test Account',
-  image: 'Qma34dB4B4N4eS5ibBkwtjTSTNCRdJrVY6E25DFuFuU8Sd'
+let registerProfileEvent = sproof.updateProfile({
+  name: 'public dev account',
+  profileText: 'This is a dev profile. Credentials can be found on github.',
+  image: 'QmSAbnUSPHAGFJFKkP2eqJd4bbgzMmq6ApWUVcE9qebHLS'
 });
 
 sproof.commit((err, res) => {

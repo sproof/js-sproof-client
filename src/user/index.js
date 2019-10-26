@@ -1,7 +1,7 @@
 const axios = require('axios');
 const io = require('socket.io-client');
 const utils = require('sproof-utils');
-
+const createCredentials  = require ('../credentials/createCredentials')
 const FormData = require('form-data');
 
 class API {
@@ -30,7 +30,10 @@ class API {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    let credentials = this.credentials;
+    url = `${url}?chainId=${this.config.chainId}`
+
+
+    let credentials = this.credentials || createCredentials(this.config.credentials);
 
     axios.post(url, {...data, credentials : credentials }).then(res => {
       if (res.data.error) {
@@ -42,6 +45,26 @@ class API {
     });
   }
 
+
+  getInvoiceLink(orderId){
+    let uri = this.config.uri;
+    let url = this.versionpath + 'order/invoice';
+    url = uri ? `${uri}${url}` : url;
+    url = url + `?orderId=${orderId}&sessionToken=${this.credentials.sessionToken}&email=${this.credentials.email}`
+
+    return url
+  }
+
+  getOrderConfirmationLink(orderId){
+    let uri = this.config.uri;
+    let url = this.versionpath + 'order/confirmation';
+    url = uri ? `${uri}${url}` : url;
+    url = url + `?orderId=${orderId}&sessionToken=${this.credentials.sessionToken}&email=${this.credentials.email}`
+
+    return url
+  }
+
+
   get(url, params, callback) {
 
     let uri = this.config.uri;
@@ -51,9 +74,12 @@ class API {
     url = `${url}${params.id ? `/${params.id}/` : '' }`;
     delete params.id;
 
-    let auth = this.credentials;
-    params = {...params};
+    let auth = this.credentials || createCredentials(this.config.credentials);
 
+
+    params.chainId = this.config.chainId
+
+    params = {...params};
     let lst = Object.keys(params).map(k => `${k}=${params[k]}`);
 
     if (lst.length !== 0)
@@ -72,9 +98,13 @@ class API {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    let auth = this.credentials;
+    let auth = this.credentials || createCredentials(this.config.credentials);
 
-    if (id) url = url+`/${id}`
+
+    if (id) url = url+`/${id}`;
+
+
+    url = `${url}?chainId=${this.config.chainId}`
 
     axios.delete(url, { headers: {auth: JSON.stringify(auth) }}).then(res => {
       if (res.data.error) {
@@ -93,19 +123,23 @@ class API {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    let credentials = this.credentials;
+    let credentials = this.credentials || createCredentials(this.config.credentials);
+
 
     const formData = new FormData();
 
     formData.append('file', buf, {filename: 'file'});
-    let fd = buf.name ? formData : { file: formData }
+    let fd = buf.name ? formData : { file: formData };
+
+    url = `${url}?chainId=${this.config.chainId}`
+
 
     axios({
       method: 'post',
       url,
       data: fd,
       maxContentLength: 50 * 1024 * 1024, // 50MB
-      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(this.credentials) }}
+      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(credentials) }}
     })
       .then((res) => {
         if (res.data.error) {
@@ -121,7 +155,6 @@ class API {
 
   createError (err) {
     let status, message;
-
     if (err.response && err.response.data){
       message = err.response.data.error;
       status = err.response.status;
@@ -173,13 +206,22 @@ class API {
     this.post('user/event', {event}, callback);
   }
 
+  updateChain(chainId, callback) {
+    this.post('user/chain', {chainId}, callback);
+  }
+
   deleteEvent(hash, callback) {
     this.delete('user/event', hash, callback);
+  }
+
+  validUsername(username, callback) {
+    this.get('user/username', {username}, callback);
   }
 
   getUser(callback) {
     this.get('user', {}, callback);
   }
+
 
   createKey(passphrase, callback) {
     let ec = utils.createEncryptedCredentials(passphrase);
@@ -204,26 +246,27 @@ class API {
     this.post('user/key', {encryptedMnemonic}, callback);
   }
 
+  confirmPayment(data, callback) {
+    this.post('payment/confirm', {...data}, callback);
+  }
 
-  // getHashForEvents (data, callback) {
-  //   this.post('storage/hash', {data}, callback);
-  // }
-  //
-  // getStatus(callback) {
-  //   this.get('storage/status', callback);
-  // }
-  //
-  // getRawTransaction (eventContainer, callback) {
-  //   this.post('storage/transaction', {eventContainer, address: this.config.credentials.address }, callback);
-  // }
-  //
-  // submit (eventContainer, signedTx, transactionHash, callback) {
-  //   this.post('storage/submit', {eventContainer, signedTx, transactionHash}, callback);
-  // }
-  //
-  // submitPremium(eventContainer, from,  hash, dhtHash, signature, callback) {
-  //   this.post('storage/premium/submit', {eventContainer, hash, dhtHash, from, signature}, callback);
-  // }
+  getPlans(callback) {
+    this.get('plan', {}, callback);
+  }
+
+  updateBillingAddress(billingAddress, callback) {
+    this.post('user/billingAddress', {billingAddress}, callback);
+  }
+
+  addOrder(type, data, callback){
+    this.post('order', {orderType: type, data}, callback);
+  }
+
+  getOrders(params,callback){
+    this.get('order', params, callback);
+  }
+
+
 }
 
 module.exports = API;

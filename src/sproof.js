@@ -3,6 +3,7 @@ const Receiver = require ('./receiver');
 const Message = require ('./message');
 const Api = require ('./api');
 const User = require ('./user');
+const Registration = require('./registration');
 
 const _ = require ('lodash');
 const eventsSchema = require ('sproof-schema').eventsSchema;
@@ -33,6 +34,7 @@ class Sproof {
     this.getHash = utils.getHash;
     this.getCredentials = utils.getCredentials;
     this.getSalt = utils.getSalt;
+
 
   }
 
@@ -123,6 +125,39 @@ class Sproof {
     })
   }
 
+  prepareEvents(eventsToAdd){
+    let allEvents = [...eventsToAdd];
+
+    this.events = [];
+    let hashes =[];
+
+    allEvents.map(e => {
+      let hash;
+      switch(e.eventType){
+        case "DOCUMENT_REGISTER":
+          hash = this.getHash(e.data);
+
+          if (!hashes.includes(hash))
+            this.registerDocumentBulk(new Registration(e.data));
+
+          break;
+        case "DOCUMENT_REGISTER_BULK":
+          e.data.map(r => {
+            hash = this.getHash(r);
+            if (!hashes.includes(hash))
+              this.registerDocumentBulk(new Registration(r))
+          });
+          break;
+        default:
+          hash = this.getHash(e);
+          if (!hashes.includes(hash))
+            this.addEvent(e);
+      }
+      hashes.push(hash)
+    })
+    return this.events;
+  }
+
   addEvent(event){
     this.events.push(event);
     return event;
@@ -144,6 +179,8 @@ class Sproof {
   getUser(callback) {
     this.api.get('user', {}, callback);
   }
+
+
 
   getState(callback) {
     this.api.get('state', {} , callback);
@@ -186,7 +223,7 @@ class Sproof {
     let params = {id};
 
     if (verificationProfile)
-      params['verificationProfile'] = verificationProfile
+      params['verificationProfile'] = verificationProfile;
 
     this.api.get('verification', params, callback);
   }

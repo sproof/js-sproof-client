@@ -2,6 +2,8 @@ const axios = require('axios');
 const io = require('socket.io-client');
 const utils = require('sproof-utils');
 
+const createCredentials = require('../credentials/createCredentials')
+
 const FormData = require('form-data');
 
 class API {
@@ -12,23 +14,10 @@ class API {
 
   }
 
-  createCredentials (credentials) {
-    let signature;
-
-    let timestamp = Math.round(new Date().getTime()/1000);
-    if (credentials.address)
-      signature = utils.sign(credentials.address+":"+timestamp, credentials.privateKey);
-
-    return {
-      address: credentials.address,
-      timestamp,
-      signature
-    }
-  }
 
   on (event, fun) {
     let webSocketUri = this.config.socket || this.config.uri;
-    if (!this.io) this.io = io(webSocketUri);
+    if (!this.io) this.io = io(webSocketUri+'?chainId='+this.config.chainId);
     this.io.on(event, fun);
   }
 
@@ -36,8 +25,12 @@ class API {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    let credentials = this.createCredentials(this.config.credentials);
-      axios.post(url, {...data, credentials}).then(res => {
+    let credentials = createCredentials(this.config.credentials);
+
+    url = `${url}?chainId=${this.config.chainId}`
+
+
+    axios.post(url, {...data, credentials}).then(res => {
         if (res.data.error) {
           return callback({message: res.data.error, status: res.status});
         }
@@ -52,13 +45,15 @@ class API {
     url =  this.versionpath + url;
     url = this.config.uri ? `${this.config.uri}${url}` : url;
 
-    let auth = this.config.credentials && this.config.credentials.privateKey && this.createCredentials(this.config.credentials);
+    let auth = this.config.credentials && this.config.credentials.privateKey && createCredentials(this.config.credentials);
 
 
     const formData = new FormData();
 
     formData.append('file', buf, {filename: 'file'});
-    let fd = buf.name ? formData : { file: formData }
+    let fd = buf.name ? formData : { file: formData };
+
+    url = `${url}?chainId=${this.config.chainId}`
 
     // this.sendFormData('storage/upload', formData, callback, true);
     axios({
@@ -66,7 +61,7 @@ class API {
       url,
       data: fd,
       maxContentLength: 50 * 1024 * 1024, // 50MB
-      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)  } }
+      config: { headers: {'Content-Type': 'multipart/form-data', auth: JSON.stringify(auth)} }
     })
       .then((res) => {
         if (res.data.error) {
@@ -92,7 +87,9 @@ class API {
     url = `${url}${params.id ? `/${params.id}/` : '' }`;
     delete params.id;
 
-    let auth = this.config.credentials && this.config.credentials.privateKey && this.createCredentials(this.config.credentials);
+    params.chainId = this.config.chainId
+
+    let auth = this.config.credentials && this.config.credentials.privateKey && createCredentials(this.config.credentials);
     params = {...params};
 
     let lst = Object.keys(params).map(k => `${k}=${params[k]}`);
@@ -128,6 +125,10 @@ class API {
 
   registerPremiumUser(data, callback) {
     this.post('user/register', data, callback);
+  }
+
+  sproofClientKeepAlive(data, callback){
+    this.post('user/clientKeepAlive', {data}, callback)
   }
 
   getHashForEvents (data, callback) {
