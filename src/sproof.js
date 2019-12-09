@@ -129,7 +129,7 @@ class Sproof {
     let allEvents = [...eventsToAdd];
 
     this.events = [];
-    let hashes =[];
+    let hashes = [];
 
     allEvents.map(e => {
       let hash;
@@ -248,7 +248,68 @@ class Sproof {
   }
 
 
+  async prepareFirstRegistration(registrationData, address, encryptedMenemonic, passphrase, callback){
 
+    let menemonic = utils.decryptAES(passphrase, encryptedMenemonic)
+
+    if (menemonic.split(' ').length != 12)
+      return callback('Wrong passphrase!');
+
+    let eventsMain = [{eventType: 'PROFILE_REGISTER', data: registrationData}];
+    let eventsTestnet = [{eventType: 'PROFILE_REGISTER', data: {...registrationData, name: registrationData.name + ' [test profile]'}}];
+    let version = this.config.version;
+    let nonce = 1;
+    let chainIdMain = '1';
+    let chainIdTest = '3';
+    let chain = this.config.chain;
+    let from = address;
+
+    let mainnetTx = {
+      events : eventsMain, version, nonce, chainId: chainIdMain, chain, from
+    };
+
+    let testnetTx = {
+      events : eventsTestnet, version, nonce, chainId: chainIdTest, chain, from
+    };
+
+    let mainnetHash = {};
+    let testnetHash = {};
+
+    window.sp.config.credentials = {};
+
+
+    mainnetHash = await this.api.getHashForEventsPromise(mainnetTx);
+    testnetHash = await this.api.getHashForEventsPromise(testnetTx);
+
+    let mainnetHashToRegister = mainnetHash.hashToRegister;
+    let testnetHashToRegister = testnetHash.hashToRegister;
+
+    let privateKey = utils.restoreCredentials(menemonic).privateKey;
+
+
+    let signatureMainnet;
+    let signatureTestnet;
+
+    signatureMainnet = utils.sign(mainnetHashToRegister, privateKey);
+    signatureTestnet = utils.sign(testnetHashToRegister, privateKey);
+
+    callback(null,{
+      mainnet: {
+        eventContainer : mainnetTx,
+        from: address,
+        hashToRegister: mainnetHashToRegister,
+        hash: mainnetHash.hash,
+        signature: signatureMainnet
+      },
+      testnet: {
+        eventContainer : testnetTx,
+        from: address,
+        hashToRegister: testnetHashToRegister,
+        hash: testnetHash.hash,
+        signature: signatureTestnet
+      }
+    });
+  }
 
 
   commitPremium(callback){

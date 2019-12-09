@@ -135,6 +135,17 @@ class API {
     this.post('storage/hash', {data}, callback);
   }
 
+  getHashForEventsPromise (data) {
+    return new Promise ( (resolve, reject) => {
+      this.post('storage/hash', {data}, (err, res) => {
+        if (err) return reject(err);
+        else return resolve(res);
+      });
+
+    })
+
+  }
+
   getStatus(callback) {
     this.get('storage/status', callback);
   }

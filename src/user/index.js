@@ -21,6 +21,7 @@ class API {
 
   setSessionCredentials(email, sessionToken) {
     this.credentials = {
+      ...this.credentials,
       sessionToken,
       email
     };
@@ -175,6 +176,50 @@ class API {
     this.post('user/register', {email}, callback);
   }
 
+
+  updateUiSettings(setting, callback){
+    this.post('user/uisettings', { setting }, callback);
+  }
+
+  setPlanSubscription(value, callback){
+    this.post('user/plan/subscription', { value }, callback);
+  }
+
+  signUp(data, callback){
+    let {email, password, username, domain, passphrase, partnerId} = data;
+
+    let hashedPassword = utils.getHash(password);
+    let encryptedCredentials = utils.createEncryptedCredentials(passphrase);
+
+
+    this.post('user/signup', {
+      email,
+      hashedPassword,
+      encryptedCredentials,
+      username,
+      partnerId,
+      domain
+    }, callback);
+  }
+
+  getPartnerStyle(id, callback){
+    this.get('partner/style/'+id, {}, callback)
+  }
+
+  signUpFinal(data, verificationToken, callback){
+    this.post('user/signup/final', {
+      verificationToken,
+      ...data
+    }, callback)
+  }
+
+  getSignUpData(verificationToken, callback){
+
+    this.post('user/signup/data', {
+     verificationToken
+    }, callback);
+  }
+
   setPassword(data, callback) {
     let {password, verificationToken} = data;
 
@@ -250,6 +295,10 @@ class API {
     this.post('payment/confirm', {...data}, callback);
   }
 
+  confirmPaymentSignUp(data, callback) {
+    this.post('payment/signup/confirm', {...data}, callback);
+  }
+
   getPlans(callback) {
     this.get('plan', {}, callback);
   }
@@ -266,6 +315,13 @@ class API {
     this.get('order', params, callback);
   }
 
+  getCustomers(params, callback){
+    this.get('partner/customer', params, callback);
+  }
+
+  addPartnerOrder (data, callback){
+    this.post('partner/customer/order', data, callback);
+  }
 
 }
 
